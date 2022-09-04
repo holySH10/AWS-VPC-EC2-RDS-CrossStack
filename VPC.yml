@@ -1,0 +1,165 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Network
+
+Resources: 
+
+#VPC
+  myVPC2:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.16.0.0/16
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: MyVPC2fromCF
+
+#Subnet
+  PublicSubnet01:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: "ap-northeast-1a"
+      VpcId: !Ref myVPC2
+      CidrBlock: 172.16.10.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: PublicSubnet01fromCF
+
+  PublicSubnet02:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: "ap-northeast-1c"
+      VpcId: !Ref myVPC2
+      CidrBlock: 172.16.11.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: PublicSubnet02fromCF
+
+  PrivateSubnet01:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: "ap-northeast-1a"
+      VpcId: !Ref myVPC2
+      CidrBlock: 172.16.20.0/24
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: PrivateSubent01fromCF
+
+  PrivateSubnet02:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: "ap-northeast-1c"
+      VpcId: !Ref myVPC2
+      CidrBlock: 172.16.21.0/24
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: PrivateSubnet02fromCF
+
+#InternetGateway
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: IGfromCF
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref myVPC2
+      InternetGatewayId: !Ref InternetGateway
+
+#PublicRouteTabele
+  PublicRouteTabele:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref myVPC2
+      Tags:
+        - Key: Name
+          Value: PublicRoutefromCF
+  
+  DefaultPublicRoute:
+    Type: "AWS::EC2::Route"
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref PublicRouteTabele
+          
+  PublicRouteTableAssociation01:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref PublicRouteTabele
+      SubnetId: !Ref PublicSubnet01
+
+  PublicRouteTableAssociation02:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref PublicRouteTabele
+      SubnetId: !Ref PublicSubnet02
+
+#PrivateRouteTabele
+  PrivateRouteTabele:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref myVPC2
+      Tags:
+        - Key: Name
+          Value: PrivateRoute01fromCF
+          
+  PrivateRouteTableAssociation01:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref PrivateRouteTabele
+      SubnetId: !Ref PrivateSubnet01
+
+  PrivateRouteTableAssociation02:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref PrivateRouteTabele
+      SubnetId: !Ref PrivateSubnet02
+
+#SecurityGroup
+  secGroupName:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: Group-CF
+      GroupDescription: Description-CF
+      VpcId: !Ref myVPC2
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: SGfromCF
+
+#Outpus
+Outputs: 
+  VPC:
+      Value: !Ref myVPC2
+      Export:
+        Name: VPC
+  Subnet1:
+      Value: !Ref PublicSubnet01
+      Export:
+        Name: Public01
+  Subnet2:
+      Value: !Ref PrivateSubnet01
+      Export:
+        Name: Private01
+  Subnet3:
+      Value: !Ref PrivateSubnet02
+      Export:
+        Name: Private02
+  SG1:
+      Value: !GetAtt secGroupName.GroupId
+      Export:
+        Name: SG1Name
