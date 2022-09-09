@@ -1,3 +1,2 @@
-# AWS-VPC-EC2-RDS-CrossStack
-最小限のリソース
-VPC.ymlとEC2RDS.ymlのクロススタック構成
+# AWS-VPC-EC2-RDS-CrossStack CloudFormation Templates
+VPC.ymlとEC2-RDS.ymlのクロススタック構成
